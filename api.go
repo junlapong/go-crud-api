@@ -13,15 +13,16 @@ import (
 	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
+	//_ "github.com/mattn/go-sqlite3"
 )
 
 const (
 	//mysql db setting
-	user     = "root"
-	password = ""
+	user     = "crud"
+	password = "pass"
 	host     = "127.0.0.1"
 	port     = "3306"
-	database = "go-crud-api"
+	database = "crud"
 
 	//server setting
 	serverPort = "8000"
