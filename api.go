@@ -18,11 +18,11 @@ import (
 
 const (
 	//mysql db setting
-	user     = "crud"
-	password = "pass"
+	user     = "root"
+	password = "r00tp@55"
 	host     = "127.0.0.1"
 	port     = "3306"
-	database = "crud"
+	database = "poc_db"
 
 	//server setting
 	serverPort = "8000"

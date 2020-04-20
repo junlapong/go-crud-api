@@ -1,0 +1,25 @@
+
+@host = http://localhost:8000
+
+###
+GET {{host}}/posts
+Accept: application/json
+
+###
+POST {{host}}/posts
+Content-Type: application/json
+
+{
+    "comment": "test"
+}
+
+###
+PUT {{host}}/posts/1
+Content-Type: application/json
+
+{
+    "comment": "test emoji 👽💔"
+}
+
+###
+DELETE {{host}}/posts/2
