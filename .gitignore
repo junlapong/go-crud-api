@@ -2,5 +2,5 @@ debug
 go-crud-api
 vendor
 .vscode
+live-reload
 api
-

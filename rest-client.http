@@ -2,24 +2,28 @@
 @host = http://localhost:8000
 
 ###
-GET {{host}}/posts
+GET {{host}}/users
 Accept: application/json
 
 ###
-POST {{host}}/posts
+GET {{host}}/users/1
+Accept: application/json
+
+###
+POST {{host}}/users
 Content-Type: application/json
 
 {
-    "comment": "test"
+    "name": "test"
 }
 
 ###
-PUT {{host}}/posts/1
+PUT {{host}}/users/1
 Content-Type: application/json
 
 {
-    "comment": "test emoji 👽💔"
+    "name": "test emoji 👽💔"
 }
 
 ###
-DELETE {{host}}/posts/2
+DELETE {{host}}/users/2

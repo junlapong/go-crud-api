@@ -18,7 +18,7 @@ import (
 
 const (
 	//mysql db setting
-	driver   = "sqlite3"
+	driver = "sqlite3"
 	//user     = "root"
 	//password = "r00tp@55"
 	//host     = "127.0.0.1"
@@ -26,7 +26,7 @@ const (
 	database = "db/crud.sqlite"
 
 	//server setting
-	serverPort = "8080"
+	serverPort = "8000"
 
 	maxConnections = 256
 )
@@ -69,13 +69,22 @@ func requestHandler(w http.ResponseWriter, req *http.Request) {
 	} else {
 		args = make([]interface{}, 0, len(input))
 	}
+
 	columns := make([]string, 0, len(input))
+	postColumns := make([]string, 0, len(input))
+	postValues := make([]string, 0, len(input))
+
 	for column, arg := range input {
 		name := regexp.MustCompile("[^a-z0-9_]+").ReplaceAllString(column, "")
 		args = append(args, arg)
 		columns = append(columns, fmt.Sprintf("`%s`=?", name))
+		postColumns = append(postColumns, name)
+		postValues = append(postValues, "?")
 	}
+
 	set := strings.Join(columns, ", ")
+	postC := strings.Join(postColumns, ", ")
+	postV := strings.Join(postValues, ", ")
 
 	if key > 0 {
 		args = append(args, key)
@@ -95,25 +104,22 @@ func requestHandler(w http.ResponseWriter, req *http.Request) {
 		query = fmt.Sprintf("update `%s` set %s where `id`=?", table, set)
 		break
 	case "POST":
-		query = fmt.Sprintf("insert into `%s` set %s", table, set)
+		query = fmt.Sprintf("insert into `%s`(%s) values(%s)", table, postC, postV)
 		break
 	case "DELETE":
 		query = fmt.Sprintf("delete from `%s` where `id`=?", table)
 		break
 	}
 
+	log.Println("SQL: " + query)
+
 	if method == "GET" {
 		rows, err := db.Query(query, args...)
-		if err != nil {
-			log.Print(err)
-			return
-		}
+		checkErr(err)
 
 		cols, err := rows.Columns()
-		if err != nil {
-			log.Print(err)
-			return
-		}
+		checkErr(err)
+
 		if key == 0 {
 			w.Write([]byte("{"))
 			msg, _ = json.Marshal(table)
@@ -134,10 +140,8 @@ func requestHandler(w http.ResponseWriter, req *http.Request) {
 
 		for i := 0; rows.Next(); i++ {
 			err := rows.Scan(values...)
-			if err != nil {
-				log.Print(err)
-				return
-			}
+			checkErr(err)
+
 			if key == 0 {
 				if i > 0 {
 					w.Write([]byte(","))
@@ -152,19 +156,33 @@ func requestHandler(w http.ResponseWriter, req *http.Request) {
 		if key == 0 {
 			w.Write([]byte("]}}"))
 		}
+	} else if method == "POST" {
+		stmt, err := db.Prepare(query)
+		checkErr(err)
+
+		res, err := stmt.Exec(args...)
+		checkErr(err)
+
+		id, err := res.LastInsertId()
+		checkErr(err)
+
+		msg, _ = json.Marshal(id)
+		w.Write(msg)
+
 	} else {
 		result, err := db.Exec(query, args...)
-		if err != nil {
-			log.Print(err)
-			return
-		}
-		if method == "POST" {
-			data, _ = result.LastInsertId()
-		} else {
-			data, _ = result.RowsAffected()
-		}
+		checkErr(err)
+
+		data, _ = result.RowsAffected()
 		msg, _ = json.Marshal(data)
 		w.Write(msg)
+	}
+}
+
+func checkErr(err error) {
+	if err != nil {
+		log.Print(err)
+		return
 	}
 }
 
@@ -181,11 +199,11 @@ func main() {
 	// close mysql connection
 	defer db.Close()
 
-	http.HandleFunc("/", requestHandler)
 	log.Printf("Listen http://localhost:%s", serverPort)
+	http.HandleFunc("/", requestHandler)
 	err = http.ListenAndServe(*listenAddr, nil)
+
 	if err != nil {
 		log.Fatal("ListenAndServe error: ", err)
 	}
 }
-
