@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	//mysql db settin
+	//mysql db setting
 	driver   = "sqlite3"
 	//user     = "root"
 	//password = "r00tp@55"
@@ -170,7 +170,7 @@ func requestHandler(w http.ResponseWriter, req *http.Request) {
 
 func main() {
 	var err error
-	db, err = sql.Open("sqlite3", connString)
+	db, err = sql.Open(driver, connString)
 	if err != nil {
 		panic(err.Error())
 	}
