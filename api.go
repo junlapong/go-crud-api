@@ -162,6 +162,11 @@ func requestHandler(w http.ResponseWriter, req *http.Request) {
 
 		res, err := stmt.Exec(args...)
 		checkErr(err)
+		if err != nil {
+			msg, _ = json.Marshal(err.Error())
+			w.Write(msg)
+			return
+		}
 
 		id, err := res.LastInsertId()
 		checkErr(err)
@@ -169,13 +174,18 @@ func requestHandler(w http.ResponseWriter, req *http.Request) {
 		msg, _ = json.Marshal(id)
 		w.Write(msg)
 
-	} else {
+	} else if method == "PUT" || method == "DELETE" {
 		result, err := db.Exec(query, args...)
 		checkErr(err)
 
 		data, _ = result.RowsAffected()
 		msg, _ = json.Marshal(data)
 		w.Write(msg)
+	} else {
+		data = fmt.Sprintf("method %s not allow", method)
+		log.Println(data)
+		// msg, _ = json.Marshal(data)
+		// w.Write(msg)
 	}
 }
 
@@ -196,7 +206,7 @@ func main() {
 	db.SetMaxIdleConns(maxConnections)
 	db.SetMaxOpenConns(maxConnections)
 
-	// close mysql connection
+	// close db connection
 	defer db.Close()
 
 	log.Printf("Listen http://localhost:%s", serverPort)
