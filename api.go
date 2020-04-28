@@ -12,20 +12,21 @@ import (
 	"strconv"
 	"strings"
 
-	_ "github.com/go-sql-driver/mysql"
-	//_ "github.com/mattn/go-sqlite3"
+	//_ "github.com/go-sql-driver/mysql"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 const (
-	//mysql db setting
-	user     = "root"
-	password = "r00tp@55"
-	host     = "127.0.0.1"
-	port     = "3306"
-	database = "poc_db"
+	//mysql db settin
+	driver   = "sqlite3"
+	//user     = "root"
+	//password = "r00tp@55"
+	//host     = "127.0.0.1"
+	//port     = "3306"
+	database = "db/crud.sqlite"
 
 	//server setting
-	serverPort = "8000"
+	serverPort = "8080"
 
 	maxConnections = 256
 )
@@ -35,8 +36,9 @@ var (
 )
 
 var (
-	listenAddr       = flag.String("listenAddr", ":"+serverPort, "Address to listen to")
-	connectionString = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", user, password, host, port, database)
+	listenAddr = flag.String("listenAddr", ":"+serverPort, "Address to listen to")
+	//connString = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", user, password, host, port, database)
+	connString = fmt.Sprintf("%s", database)
 )
 
 func requestHandler(w http.ResponseWriter, req *http.Request) {
@@ -168,7 +170,7 @@ func requestHandler(w http.ResponseWriter, req *http.Request) {
 
 func main() {
 	var err error
-	db, err = sql.Open("mysql", connectionString)
+	db, err = sql.Open("sqlite3", connString)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -180,8 +182,10 @@ func main() {
 	defer db.Close()
 
 	http.HandleFunc("/", requestHandler)
+	log.Printf("Listen http://localhost:%s", serverPort)
 	err = http.ListenAndServe(*listenAddr, nil)
 	if err != nil {
 		log.Fatal("ListenAndServe error: ", err)
 	}
 }
+
