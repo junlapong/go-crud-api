@@ -5,5 +5,3 @@ build:
 
 dev:
 	go run api.go
-
-
